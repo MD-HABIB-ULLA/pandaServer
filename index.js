@@ -51,22 +51,42 @@ async function run() {
         });
 
 
-        app.get("/shoe", async (req, res) => {
+
+        // find the category wise brand name 
+        app.get("/brands", async (req, res) => {
+            const result = await allProduct.aggregate([
+                {
+                    $group: {
+                        _id: "$category",
+                        brands: { $addToSet: "$brand" }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        category: "$_id",
+                        brands: 1
+                    }
+                }
+            ]).toArray();
+            res.send(result)
+        })
+        app.get("/Shoe", async (req, res) => {
             const result = await allProduct.find({ category: "Shoe" }).toArray()
 
             res.send(result)
         })
-        app.get("/watch", async (req, res) => {
+        app.get("/Watch", async (req, res) => {
             const result = await allProduct.find({ category: "Watch" }).toArray()
 
             res.send(result)
         })
-        app.get("/tv", async (req, res) => {
+        app.get("/TV", async (req, res) => {
             const result = await allProduct.find({ category: "TV" }).toArray()
 
             res.send(result)
         })
-        app.get("/bag", async (req, res) => {
+        app.get("/Bag", async (req, res) => {
             const result = await allProduct.find({ category: "Bag" }).toArray()
 
             res.send(result)
