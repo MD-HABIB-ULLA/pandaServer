@@ -34,21 +34,60 @@ async function run() {
         const allProduct = client.db("panda").collection("products")
         app.get("/products", async (req, res) => {
             try {
-                const { search } = req.query;
-                let products;
+                const { search, category, brandName, sort, page, limit = 12, minPrice, maxPrice } = req.query;
+                const skip = (page - 1) * limit;
 
+                let query = {};
+
+                // Building query object based on search and filter criteria
                 if (search) {
-                    products = await allProduct.find({ name: new RegExp(search, 'i') }).toArray();
-                    return res.send(products); // Use return to exit the function after sending response
+                    query.name = new RegExp(search, 'i');
                 }
+                if (category) {
+                    query.category = category;
+                }
+                if (brandName) {
+                    query.brand = brandName;
+                }
+                console.log(minPrice, maxPrice)
+                if (minPrice && maxPrice) {
+                    query.price = { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) };
+                } else if (minPrice) {
+                    query.price = { $gte: parseFloat(minPrice) };
+                } else if (maxPrice) {
+                    query.price = { $lte: parseFloat(maxPrice) };
+                }
+                const ProductCount = await allProduct.find(query).toArray()
+                const count = ProductCount.length
+                // Fetching products with filtering, pagination, and sorting
+                const products = await allProduct.find(query)
+                    .skip(parseInt(skip))
+                    .limit(parseInt(limit))
+                    .sort(getSortQuery(sort))
+                    .toArray();
 
-                products = await allProduct.find().toArray();
-                return res.send(products); // Use return to ensure no further code is executed
+                return res.send({ count, products }); // Send JSON response
+
             } catch (error) {
                 console.error(error);
                 return res.status(500).send("Internal Server Error"); // Handle errors properly
             }
         });
+
+        // Helper function to handle sorting
+        const getSortQuery = (sort) => {
+            switch (sort) {
+                case 'low-to-high':
+                    return { price: 1 };
+                case 'high-to-low':
+                    return { price: -1 };
+                case 'newest-first':
+                    return { date: -1 };
+                default:
+                    return {}; // No sorting
+            }
+        };
+
 
 
 
@@ -88,6 +127,13 @@ async function run() {
         })
         app.get("/Bag", async (req, res) => {
             const result = await allProduct.find({ category: "Bag" }).toArray()
+
+            res.send(result)
+        })
+        app.get("/brand", async (req, res) => {
+            const { brandName } = req.query
+            console.log(brandName)
+            const result = await allProduct.find({ brand: brandName }).toArray()
 
             res.send(result)
         })
