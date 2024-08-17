@@ -5,7 +5,7 @@
 
 # **Panda** - Server
 
-**Description:**
+
 This is the backend server for a single-page website built with Node.js and Express.js, providing APIs for managing product data, including search, filtering, sorting, and pagination functionalities. The server also integrates with MongoDB for data storage.
 
 **Features:**
